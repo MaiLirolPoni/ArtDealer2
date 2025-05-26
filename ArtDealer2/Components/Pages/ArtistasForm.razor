@@ -1,0 +1,84 @@
+﻿@page "/artista/nuevo"
+@page "/artista/editar/{Id:int}"
+
+@rendermode InteractiveServer
+@inject NavigationManager _navigationManager
+@inject IRepositorioArtistas _repositorioArtistas
+@inject IRepositorioObras _repositorioObras
+
+<h3>@_titulo Artista</h3>
+
+<EditForm Model="_artista" FormName="frmArtista" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="mb-3 row">
+        <label for="txtNombre" class="col-sm-2 col-form-label">Nombre</label>
+        <div class="col-sm-10">
+            <InputText id="txtNombre" class="form-control" @bind-Value="_artista.NombreArtista" />
+            <ValidationMessage For="@(() => _artista.NombreArtista)" />
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <label for="txtCorreo" class="col-sm-2 col-form-label">Correo</label>
+        <div class="col-sm-10">
+            <InputText id="txtCorreo" class="form-control" @bind-Value="_artista.CorreoArtista" />
+            <ValidationMessage For="@(() => _artista.CorreoArtista)" />
+        </div>
+    </div>
+
+
+
+    <div class="row">
+        <div class="col-sm-10 offset-sm-2">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="button" class="btn btn-danger" @onclick="Cancelar">Cancelar</button>
+        </div>
+    </div>
+</EditForm>
+
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    public Artista _artista = new();
+    private string _titulo = "Nuevo";
+    private List<Obra> _obras = new();
+
+    override protected async Task OnInitializedAsync()
+    {
+        _obras = await _repositorioObras.GetAll();
+        if (Id > 0)
+        {
+            _artista = await _repositorioArtistas.Get(Id);
+            _titulo = "Modificar ";
+
+
+        }
+    }
+
+
+    private async void Guardar()
+    {
+
+        if (_artista.Id > 0)
+        {
+            await _repositorioArtistas.Update(_artista);
+        }
+        else
+        {
+            _artista.Id = 0;
+            await _repositorioArtistas.Add(_artista);
+        }
+
+        Cancelar();
+    }
+
+
+    private void Cancelar()
+    {
+        _navigationManager.NavigateTo("/artista");
+    }
+
+
+  
+}

@@ -1,0 +1,183 @@
+﻿@page "/obras"
+@rendermode InteractiveServer
+@inject NavigationManager _navigationManager
+@inject IRepositorioObras _repositorioObras
+@inject IRepositorioArtistas _repositorioArtistas
+
+<h3>Obras</h3>
+
+
+<div class="d-grid gap-2 d-md-block">
+	<a class="btn btn-success" href="obra/nueva">Registrar nueva obra</a>
+	<button @onclick="Card" class="btn btn-primary" type="button">Modo tarjeta</button>
+	<button @onclick="Table" class="btn btn-primary" type="button">Modo tabla</button>
+</div><br />
+
+@* <div class="d-grid gap-2 d-md-block">
+
+	<input type="search" @bind="filtro" class="form-control" /><br />
+	<button @onclick="Filtrar" class="btn btn-primary">Filtrar </button>
+	<button @onclick="Desfiltrar" class="btn btn-primary">Eliminar Filtros</button>
+
+</div> *@
+
+<div class="input-group w-50">
+	<input type="text" @bind="filtro" class="form-control" placeholder="Buscar..." />
+	<button class="btn btn-primary" type="button" @onclick="Filtrar">
+		<i class="fas fa-search"></i> Filtrar
+	</button>
+	<button class="btn btn-primary" type="button" @onclick="Desfiltrar">
+		<i class="fas fa-search"></i> Eliminar filtro
+	</button>
+</div>
+
+@if(_obras==null)
+{
+	<div class="spinner-border" role="status">
+		<span class="visually-hidden">Loading...</span>
+	</div>
+}
+else if(_obras.Count() > 0)
+{
+	<div style="display:flex; flex-wrap:wrap; gap: 20px; margin: 10px; display: @visibilidad1">
+		@foreach (var obra in _obrasMostradas)
+		{
+
+			<div class="card" style="width: 18rem; margin: 10px;">
+				<img src="@obra.Source" style="max-width: 18rem;" class="card-img-top" alt="...">
+				<div class="card-body">
+					<h5 class="card-title">@obra.Titulo</h5>
+					<p class="card-text">@obra.Descripcion</p>
+					<p class="card-text">Id Obra:@obra.Id</p>
+				</div>
+				<ul class="list-group list-group-flush">
+					<li class="list-group-item">@obra.FechaPublicacion?.ToString("dd/MM/yyyy")</li>
+					<li class="list-group-item">@obra.Categoria</li>
+					<li class="list-group-item">$@obra.Precio</li>
+					<li class="list-group-item">@obra.Artista?.NombreArtista | Id Artista: @obra.ArtistaId</li>
+				</ul>
+				<div class="card-body">
+					<button class="btn btn-outline-secondary" title="Editar" @onclick="@(()=>Editar(obra.Id))">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+							<path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325" />
+						</svg>
+					</button>
+					<button class="btn btn-outline-secondary" title="Eliminar" @onclick="@(()=>Eliminar(obra))">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+							<path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+						</svg>
+					</button>
+				</div>
+			</div>
+		}
+	</div>
+
+
+	<table class="table table-striped" style="display:@visibilidad2">
+		<thead>
+			<tr>
+				<th>Id</th>
+				<th>Titulo</th>
+				<th>Categoria</th>
+				<th>Descripción</th>
+				<th>Fecha Publicación</th>
+				<th>Imagen</th>
+				<th>Precio</th>
+				<th>ArtistaId</th>
+				<th>Acciones</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			@foreach(var obra in _obrasMostradas)
+			{
+				<tr>
+					<td>@obra.Id</td>
+					<td>@obra.Titulo</td>
+					<td>@obra.Categoria</td>
+					<td  style="border-radius:10px ;max-width: 150px;">@obra.Descripcion</td>
+					<td>@obra.FechaPublicacion?.ToString("dd/MM/yyyy")</td> 
+					<!--Esto es para dar un formato, recortando la fecha ya que sino nos muestra la hora y se toma mucho espacio. 
+					acepta nulos pq igualmente se asigna automaticamente al momento de guardar por lo tanto no representa ningún problema-->
+					<td> <img src=@obra.Source style="max-width:200px"  /></td>
+					<td>$@obra.Precio</td>
+					<td>@obra.Artista?.Id</td>
+
+
+					<td>
+						<button class="btn btn-outline-secondary" title="Editar" @onclick="@(()=>Editar(obra.Id))">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+								<path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325" />
+							</svg>
+						</button>
+						<button class="btn btn-outline-secondary" title="Eliminar" @onclick="@(()=>Eliminar(obra))">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+								<path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+							</svg>
+						</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+
+
+	</table>
+
+}
+
+
+@code {
+	private string filtro="";
+	private List<Obra>? _obrasMostradas;
+	private List<Obra>? _obras;
+
+	private string visibilidad1="flex";
+	private string visibilidad2="none";
+
+	private void Filtrar()
+	{
+		_obrasMostradas = _obras?
+			.Where(o=>
+						(o.Titulo.Contains(filtro, StringComparison.OrdinalIgnoreCase)) ||
+						(o.Artista.NombreArtista.Contains(filtro, StringComparison.OrdinalIgnoreCase)) ||
+						(o.Id.ToString().Contains(filtro)) ||
+						(o.ArtistaId.ToString().Contains(filtro))
+				)
+			.ToList();
+	}
+
+	private void Desfiltrar()
+	{
+		_obrasMostradas = _obras;
+	}
+
+
+
+	private void Card(){
+		visibilidad1 = "flex";
+		visibilidad2 = "none";
+	}
+
+	private void Table(){
+		visibilidad1 = "none";
+		visibilidad2 = "inline-block";
+	}
+
+	override protected async Task OnInitializedAsync(){
+		_obras = await _repositorioObras.GetAll();
+		_obrasMostradas = _obras.ToList();
+	}
+
+
+	private void Editar(int id){
+
+		_navigationManager.NavigateTo($"obra/editar/{id}");
+	}
+
+	private async Task Eliminar(Obra obra){
+		await _repositorioObras.Delete(obra.Id);
+		_obras = await _repositorioObras.GetAll();
+		_obrasMostradas = _obras;
+	}
+
+}

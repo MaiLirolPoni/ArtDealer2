@@ -1,0 +1,124 @@
+﻿@page "/obra/nueva"
+@page "/obra/editar/{Id:int}"
+@inject NavigationManager _navigationManager
+@rendermode InteractiveServer
+@inject IRepositorioObras _repositorioObras
+@inject IRepositorioArtistas _repositorioArtistas
+
+<h3>@_titulo Obra</h3>
+
+<EditForm Model="_obra" FormName="frmObra" OnValidSubmit="Guardar">
+	<DataAnnotationsValidator/>
+	<div class="mb-3 row">
+		<label for="txtTitulo" class="col-sm-2 col-form-label">Titulo</label>
+		<div class="col-sm-10">
+			<InputText id="txtTitulo" class="form-control" @bind-Value="_obra.Titulo" />
+			<ValidationMessage For="@(() => _obra.Titulo)" />
+		</div>
+	</div>
+
+
+
+	<div class="mb-3 row">
+		<label for="txtClasificacion" class="col-sm-2 col-form-label">Clasificación</label>
+		<div class="col-sm-10">
+			<InputSelect class="form-select" id="txtClasificacion" @bind-Value="_obra.Categoria">
+				<option value="" selected disabled>Seleccione...</option>
+				{
+				<option value="Original">Ilustraciones (Original)</option>
+				<option value="FanArt">Ilustraciones (FanArt)</option>
+				<option value="Otros">Ilustraciones (Otros)</option>
+
+				}
+			</InputSelect>
+			<ValidationMessage For="()=>_obra.Categoria" />
+		</div>
+	</div>
+
+	<div class="mb-3 row">
+		<label for="txtTitulo" class="col-sm-2 col-form-label">Escribe una descripción de tu obra</label>
+		<div class="col-sm-10">
+			<InputText id="txtDescripcion" class="form-control" @bind-Value="_obra.Descripcion" />
+			<ValidationMessage For="@(() => _obra.Descripcion)" />
+		</div>
+	</div>
+
+	<div class="mb-3 row">
+		<label for="txtTitulo" class="col-sm-2 col-form-label">Proporciona el enlace o dirección de tu ilustración</label>
+		<div class="col-sm-10">
+			<InputText id="txtTitulo" class="form-control" @bind-Value="_obra.Source" />
+			<ValidationMessage For="@(() => _obra.Source)" />
+		</div>
+	</div>
+
+	<div class="mb-3 row">
+		<label for="txtPrecio" class="col-sm-2 col-form-label">Establece un precio</label>
+		<div class="col-sm-10">
+			<InputNumber id="precio" class="form-control" @bind-Value="_obra.Precio"/>
+			<ValidationMessage For="@(() => _obra.Precio)" />
+		</div>
+	</div>
+	<div>
+	<label for="txtArtista" class="col-sm-2 col-form-label">Selecciona tu nombre</label>
+	<InputSelect id="artistaSelect" class="form-select" @bind-Value="_obra.ArtistaId">
+		<option value="" selected>Selecciona ...</option>
+		@foreach (var artista in _artistas)
+		{
+			<option value="@artista.Id">@artista.NombreArtista</option>
+		}
+	</InputSelect>
+	</div><br /><br />
+	@* 	<div class="mb-3 row">
+		<label for="txtArtistaId" class="col-sm-2 col-form-label">Enlaza tu obra a tu nombre ingresando tu Id de artista</label>
+		<div class="col-sm-10">
+			<InputNumber id="precio" class="form-control" @bind-Value="_obra.ArtistaId" />
+			<ValidationMessage For="@(() => _obra.ArtistaId)" />
+		</div>
+	</div> *@
+	
+
+	<div class="row">
+		<div class="col-sm-10 offset-sm-2">
+			<button type="submit" class="btn btn-primary">Guardar</button>
+			<button type="button" class="btn btn-danger" @onclick="Cancelar">Cancelar</button>
+		</div>
+	</div>
+
+</EditForm>
+
+
+@code{
+	[Parameter]
+	public int Id{ get; set; }
+	private Obra _obra = new();
+	private string _titulo = "Nueva ";
+	private List<Artista> _artistas = new();
+
+	override protected async Task OnInitializedAsync(){
+		_artistas = await _repositorioArtistas.GetAll();
+		if(Id>0)
+		{
+			_obra = await _repositorioObras.Get(Id);
+			_titulo = "Modificar ";
+		}
+	}
+
+	private async void Guardar(){
+		_obra.FechaPublicacion = DateTime.Now;
+
+		if(Id>0)
+		{
+			await _repositorioObras.Update(_obra);
+		}else{
+			await _repositorioObras.Add(_obra);
+		}
+		Cancelar();
+	}
+
+
+	private void Cancelar()
+	{
+		_navigationManager.NavigateTo("/obras");
+	}
+
+}

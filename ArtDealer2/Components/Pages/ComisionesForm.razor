@@ -1,0 +1,97 @@
+﻿@page "/comision/nueva"
+@page "/comision/editar/{Id:int}"
+@rendermode InteractiveServer
+@inject NavigationManager _navigationManager
+@inject IRepositorioArtistas _repositorioArtistas
+@inject IRepositorioObras _repositorioObras
+@inject IRepositorioComisiones _repositorioComisiones
+<PageTitle>Comision</PageTitle>
+<h3>@_titulo Comision</h3>
+
+
+<EditForm Model="_comision" FormName="frmComision" OnValidSubmit="Guardar">
+	<div>
+		<label for="txtArtista" class="col-sm-2 col-form-label">Selecciona una Obra a comisionar</label>
+		<InputSelect id="artistaSelect" class="form-select" @bind-Value="_comision.ObraId">
+			<option value="" selected>Selecciona ...</option>
+			@foreach (var obra in _obras)
+			{
+				<option value="@obra.Id">@obra.Titulo | @obra.Artista?.NombreArtista</option>
+			}
+		</InputSelect>
+		<ValidationMessage For="@(()=>_comision.ObraId)"/>
+	</div>
+
+	<div class="mb-3 row">
+		<label for="txtNombreCliente" class="col-sm-2 col-form-label">Ingresa tu nombre</label>
+		<div class="col-sm-10">
+			<InputText id="txtCorreo" class="form-control" @bind-Value="_comision.NombreCliente" />
+			<ValidationMessage For="@(() =>_comision.NombreCliente )" />
+		</div>
+	</div>
+
+	<div class="mb-3 row">
+		<label for="txtComentarios" class="col-sm-2 col-form-label">Ingresa algún comentario o petición para el artista</label>
+		<div class="col-sm-10">
+			<InputText id="txtCorreo" class="form-control" @bind-Value="_comision.Comentarios" />
+			<ValidationMessage For="@(() =>_comision.Comentarios)" />
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-10 offset-sm-2">
+			<button type="submit" class="btn btn-primary">Guardar</button>
+			<button type="button" class="btn btn-danger" @onclick="Cancelar">Cancelar</button>
+		</div>
+	</div>
+
+</EditForm>
+@code {
+	[Parameter]
+	public int Id { get; set; }
+	private Comision _comision = new();
+
+
+	private string _titulo = "Nueva ";
+	private List<Artista> _artistas = new();
+	private List<Obra> _obras = new();
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		_artistas = await _repositorioArtistas.GetAll();
+		_obras = await _repositorioObras.GetAll();
+		if (Id > 0)
+		{
+			_comision = await _repositorioComisiones.Get(Id);
+			_titulo = "Modificar";
+		}
+	}
+
+	private async void Guardar()
+	{
+		// Buscar la obra seleccionada
+		var obraSeleccionada = _obras.FirstOrDefault(o => o.Id == _comision.ObraId);
+		if (obraSeleccionada != null)
+		{
+			_comision.ArtistaId = obraSeleccionada.ArtistaId;
+		}
+
+		if (Id > 0)
+		{
+			await _repositorioComisiones.Update(_comision);
+		}
+		else
+		{
+			await _repositorioComisiones.Add(_comision);
+		}
+
+		Cancelar();
+	}
+
+
+
+	private void Cancelar(){
+        _navigationManager.NavigateTo("/comision");
+	}
+}
