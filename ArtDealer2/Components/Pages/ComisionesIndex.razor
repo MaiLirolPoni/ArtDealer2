@@ -4,6 +4,16 @@
 @rendermode InteractiveServer
 <a class="btn btn-success" href="comision/nueva">Nueva Comision</a>
 
+<div class="input-group w-50">
+    <input type="text" @bind="filtro" class="form-control" placeholder="Buscar..." />
+    <button class="btn btn-primary" type="button" @onclick="Filtrar">
+        <i class="fas fa-search"></i> Filtrar
+    </button>
+    <button class="btn btn-primary" type="button" @onclick="Desfiltrar">
+        <i class="fas fa-search"></i> Eliminar filtro
+    </button>
+</div>
+
 @if (_comisiones== null)
 {
     <div class="spinner-border" role="status">
@@ -25,7 +35,7 @@ else if (_comisiones.Count() > 0)
         </thead>
 
         <tbody>
-            @foreach(var comision in _comisiones)
+            @foreach(var comision in _comisionesMostradas)
             {
                 <tr>
                     <td>@comision.Id</td>
@@ -47,7 +57,7 @@ else if (_comisiones.Count() > 0)
                     </td>
 
                 </tr>
-            
+
             }
         </tbody>
     </table>
@@ -57,11 +67,29 @@ else if (_comisiones.Count() > 0)
 
 
 @code{
-	private List<Comision>? _comisiones;
+    private List<Comision>? _comisiones;
+    private List<Comision>? _comisionesMostradas;
+    private string filtro = "";
+
+    private void Filtrar()
+    {
+        _comisionesMostradas = _comisiones?
+            .Where(c =>
+                        (c.Artista.NombreArtista .Contains(filtro, StringComparison.OrdinalIgnoreCase)) ||
+                        (c.Id.ToString().Contains(filtro)) ||
+                        (c.ArtistaId.ToString().Contains(filtro))
+                )
+            .ToList();
+    }
+    private void Desfiltrar()
+    {
+        _comisionesMostradas= _comisiones;
+    }
 
     override protected async Task OnInitializedAsync()
     {
         _comisiones = await _repositorioComisiones.GetAll();
+        _comisionesMostradas = _comisiones.ToList();
     }
 
     private void Editar(int id)
@@ -73,6 +101,7 @@ else if (_comisiones.Count() > 0)
     {
         await _repositorioComisiones.Delete(comision.Id);
         _comisiones= await _repositorioComisiones.GetAll();
+        _comisionesMostradas = _comisiones;
     }
 
 }
